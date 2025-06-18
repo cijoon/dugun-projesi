@@ -1,0 +1,99 @@
+body {
+  background: #F5F6FA !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+.rez-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.top-ribbon {
+  width: 100%;
+  height: 40px;
+  background: #D82C2C;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+  justify-content: center;
+}
+.brand-bar {
+  background: #fff;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(17,31,55,0.06);
+  padding-left: 24px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.brand-title { margin-left: 8px; }
+.brand-year { font-style: italic; color: #C9A362; }
+.hero-campaign {
+  background: linear-gradient(90deg,#002350,#012966);
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 32px;
+}
+.hero-campaign img { margin: 0 24px; }
+.carousel-indicator {
+  position: absolute;
+  right: 36px;
+  top: 12px;
+  color: #fff;
+  font-size: 12px;
+}
+.rez-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(17,31,55,0.06);
+  border: none;
+  padding: 32px;
+}
+.rez-title { font-size: 2.5rem; font-weight: 700; }
+.rez-desc { font-size: 1.15rem; color: #6C778E; }
+.rez-box {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(17,31,55,.06);
+  padding: 24px 20px;
+  border: 2px solid #E0E4E9;
+}
+.rez-box-main.active { border: 2px solid #0066FF; }
+.rez-box-header {
+  margin-bottom: 8px;
+}
+.badge.bg-primary { background: #0066FF !important; font-size: 1rem; }
+.badge.bg-success { background: #00A651 !important; font-size: 0.95rem; }
+.rez-option {
+  background: #F5F6FA;
+  padding: 14px 18px;
+  border-radius: 8px;
+  border: 1px solid #E0E4E9;
+  display: flex;
+  align-items: center;
+  font-size: 1.10rem;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.rez-option input[type="checkbox"] { width: 20px; height: 20px; margin-right: 12px; }
+.rez-option input[type="checkbox"]:checked + span {
+  color: #0066FF;
+  font-weight: 700;
+}
+.btn-primary {
+  background: #0066FF !important;
+  border-radius: 6px !important;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border: none;
+}
+.btn-primary:hover { background: #0057E7 !important; }
+@media (max-width: 992px) {
+  .rez-card { padding: 18px; }
+  .rez-title { font-size: 2.1rem; }
+}
