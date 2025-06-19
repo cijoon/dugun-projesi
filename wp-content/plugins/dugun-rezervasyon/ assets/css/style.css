@@ -1,99 +1,184 @@
+/* ------------- TEMEL DEĞİŞKENLER ------------- */
+:root {
+  --c-bg:        #F5F7FB;
+  --c-primary:   #0066FF;
+  --c-danger:    #E60000;
+  --c-success:   #00A651;
+  --c-shadow:    0 4px 24px rgba(17, 31, 55, .06);
+  --c-shadow-sm: 0 2px 6px  rgba(17, 31, 55, .06);
+  --c-radius-lg: 12px;
+  --c-radius:     6px;
+}
+
+/* ------------- GENEL ------------- */
 body {
-  background: #F5F6FA !important;
-  font-family: 'Inter', system-ui, sans-serif !important;
+  background: var(--c-bg);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
-.rez-container {
-  max-width: 800px;
-  margin: 0 auto;
-}
-.top-ribbon {
-  width: 100%;
-  height: 40px;
-  background: #D82C2C;
+
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ------------- PROMO / BRAND BAR ------------- */
+.promo-bar {
+  height: 38px;
+  background: #D92D2D;
   color: #fff;
-  display: flex;
-  align-items: center;
-  font-weight: bold;
   font-size: 14px;
-  justify-content: center;
-}
-.brand-bar {
-  background: #fff;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 2px 6px rgba(17,31,55,0.06);
-  padding-left: 24px;
-  font-size: 18px;
   font-weight: 600;
-  margin-bottom: 8px;
-}
-.brand-title { margin-left: 8px; }
-.brand-year { font-style: italic; color: #C9A362; }
-.hero-campaign {
-  background: linear-gradient(90deg,#002350,#012966);
-  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  margin-bottom: 32px;
 }
-.hero-campaign img { margin: 0 24px; }
-.carousel-indicator {
-  position: absolute;
-  right: 36px;
-  top: 12px;
-  color: #fff;
-  font-size: 12px;
-}
-.rez-card {
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(17,31,55,0.06);
-  border: none;
-  padding: 32px;
-}
-.rez-title { font-size: 2.5rem; font-weight: 700; }
-.rez-desc { font-size: 1.15rem; color: #6C778E; }
-.rez-box {
+
+.brand-bar {
+  height: 64px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(17,31,55,.06);
-  padding: 24px 20px;
-  border: 2px solid #E0E4E9;
-}
-.rez-box-main.active { border: 2px solid #0066FF; }
-.rez-box-header {
-  margin-bottom: 8px;
-}
-.badge.bg-primary { background: #0066FF !important; font-size: 1rem; }
-.badge.bg-success { background: #00A651 !important; font-size: 0.95rem; }
-.rez-option {
-  background: #F5F6FA;
-  padding: 14px 18px;
-  border-radius: 8px;
-  border: 1px solid #E0E4E9;
+  box-shadow: var(--c-shadow-sm);
   display: flex;
   align-items: center;
-  font-size: 1.10rem;
-  gap: 10px;
-  cursor: pointer;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  padding-inline: 1rem;
 }
-.rez-option input[type="checkbox"] { width: 20px; height: 20px; margin-right: 12px; }
-.rez-option input[type="checkbox"]:checked + span {
-  color: #0066FF;
-  font-weight: 700;
+
+.brand-bar .brand      { display: flex; align-items: center; gap: .5rem; font-size: 20px; font-weight: 600; }
+.brand-bar .brand img  { height: 32px; width: auto; }
+.brand-bar .year       { font-style: italic; color: #B28C00; font-weight: 500; }
+
+/* ------------- HERO ------------- */
+.hero {
+  background: #00164D;
+  padding-block: 2rem;
+  position: relative;
+  text-align: center;
+}
+.hero .banner        { width: 100%; max-width: 900px; border-radius: var(--c-radius); }
+.hero .pager         { position: absolute; top: .5rem; right: 1rem; color:#fff; font-size: 14px; font-weight: 500; }
+
+/* ------------- ANA İÇERİK WRAPPER ------------- */
+.main-wrapper {
+  margin-top: -60px;          /* hero ile çakıştır */
+  padding-bottom: 4rem;
+}
+
+/* ------------- SEKME / KART GENEL ------------- */
+.section-card {
+  background: #fff;
+  border-radius: var(--c-radius-lg);
+  box-shadow: var(--c-shadow);
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+/* ------------- TAKVİM ------------- */
+.month-btn {
+  width: 100%; height: 96px;
+  border: 1px solid transparent;
+  border-radius: var(--c-radius-lg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+}
+.month-btn span   { font-weight: 400; font-size: 13px; line-height: 1.1; }
+.month-btn small  { font-size: 12px; color: var(--c-success); }
+.month-btn:hover:not(.disabled):not(.active) { background:#F1F3F8; }
+.month-btn.disabled {
+  background:#E9ECEF; color:#9FA6B2; pointer-events:none;
+}
+.month-btn.active {
+  border-color: var(--c-primary);
+}
+
+/* ------------- TAKVİM ÜSTÜ BUTON GRUBU ------------- */
+.btn-toggle-group .btn                       { border-radius: var(--c-radius); font-size: 14px; padding:.35rem .8rem; }
+.btn-toggle-group .btn-outline-secondary     { --bs-btn-hover-bg:#ECEFF5; --bs-btn-hover-border-color:#CED4DA; }
+.btn-toggle-group .btn.active,
+.btn-toggle-group .btn-primary               { background: var(--c-primary); border-color:var(--c-primary); color:#fff; }
+
+/* ------------- HİZMET KARTLARI ------------- */
+.service-card {
+  border: 1px solid #E5E7EB;
+  border-radius: var(--c-radius-lg);
+  transition: box-shadow .15s, border .15s;
+  position: relative;
+}
+.service-card.selected           { border: 2px solid var(--c-primary); }
+.service-card:hover              { box-shadow: var(--c-shadow); }
+.service-card .card-body         { padding: 1rem 1rem .75rem 1rem; }
+.service-card .form-check-input  { position:absolute; top:.65rem; right:.65rem; width:20px; height:20px; cursor:pointer; }
+.badge-popular                   { background:#000; }
+
+/* ------------- ÖDEME KARTI ------------- */
+.payment-card                    { border:0; border-radius:var(--c-radius-lg); }
+.payment-card .card-header       { background:var(--c-primary); color:#fff; font-weight:600; font-size:16px; border-top-left-radius:var(--c-radius-lg); border-top-right-radius:var(--c-radius-lg); }
+.payment-card .form-check-input  { margin-top:.35rem; cursor:pointer; }
+.payment-card .form-check-label  { cursor:pointer; }
+
+/* ------------- REZERVASYON ÖZETİ ------------- */
+.summary-list dt  { font-weight:500; }
+.summary-list dd  { text-align:right; margin-bottom:.5rem; }
+
+/* ------------- TOPLAM TUTAR TABLOSU ------------- */
+.summary-table tr:last-child td       { border-top:2px solid #dee2e6; font-weight:600; }
+.summary-table .text-success          { color:var(--c-success)!important; }
+
+/* ------------- BUTON & SABİT CTA ------------- */
+.continue-btn {
+  height:56px;
+  font-size:17px;
+  font-weight:600;
+  border-radius: var(--c-radius) !important;
 }
 .btn-primary {
-  background: #0066FF !important;
-  border-radius: 6px !important;
-  font-weight: bold;
-  font-size: 1.2rem;
-  border: none;
+  background:var(--c-primary);
+  border-color:var(--c-primary);
 }
-.btn-primary:hover { background: #0057E7 !important; }
-@media (max-width: 992px) {
-  .rez-card { padding: 18px; }
-  .rez-title { font-size: 2.1rem; }
+.btn-primary:hover {
+  background:#0057E7;
+  border-color:#0057E7;
+}
+
+.cta-fixed {
+  position:fixed;
+  right:12px; top:50%;
+  transform:translateY(-50%) rotate(-90deg);
+  background:var(--c-danger); color:#fff;
+  padding:.55rem 1.15rem;
+  border-radius:4px;
+  font-weight:600;
+  box-shadow: var(--c-shadow);
+  z-index: 999;
+  cursor:pointer;
+}
+
+/* ------------- RESPONSIVE ------------- */
+@media (max-width:992px){
+  .section-card     { padding: 1.25rem; }
+  .hero .banner     { border-radius: 4px; }
+}
+/* ------------- FİNAL ÇÖZÜM: POZİSYONLAMA İLE ORTALAMA ------------- */
+.modal-dialog {
+    position: fixed; /* Pencereyi ekran düzlemine sabitler */
+    top: 50%;        /* Üst kenarını ekranın %50'sine getirir */
+    left: 50%;       /* Sol kenarını ekranın %50'sine getirir */
+    
+    /* Pencereyi kendi boyutunun yarısı kadar yukarı ve sola kaydırarak tam ortalar */
+    transform: translate(-50%, -50%);
+    
+    /* Tema veya önceki kodlardan kalan margin'leri sıfırlar */
+    margin: 0 !important; 
+}
+.payment-card {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.payment-card:hover {
+  border-color: var(--c-primary);
+}
+.payment-card input:checked ~ .form-check-label {
+  font-weight: 600;
+  border: 2px solid var(--c-primary);
+  box-shadow: 0 4px 12px rgba(0, 103, 255, 0.2);
 }

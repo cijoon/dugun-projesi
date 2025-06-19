@@ -204,3 +204,65 @@ if ( ! function_exists( 'twentytwentyfour_pattern_categories' ) ) :
 endif;
 
 add_action( 'init', 'twentytwentyfour_pattern_categories' );
+
+
+// =========================================================================
+// DÜĞÜNÜMÜZ VAR REZERVASYON SİSTEMİ İÇİN ÖZEL KODLAR
+// =========================================================================
+
+/**
+ * Rezervasyon On Onay Formu için kısa kod tanımlaması.
+ * Kullanım: [rezervasyon_on_onay_formu]
+ */
+add_shortcode('rezervasyon_on_onay_formu', 'dv_render_on_onay_formu');
+function dv_render_on_onay_formu() {
+    ob_start();
+    // Tema şablonları için 'get_template_part' kullanmak daha standart bir yoldur.
+    // Dosya yolunu temanıza göre güncelleyin. Örneğin: /templates/on-onay-template.php
+    $template_path = get_stylesheet_directory() . '/on-onay-template.php';
+    if ( file_exists( $template_path ) ) {
+        include $template_path;
+    } else {
+        return 'Hata: Rezervasyon şablonu bulunamadı.';
+    }
+    return ob_get_clean();
+}
+
+/**
+ * Rezervasyon formundan gelen AJAX isteğini işleyen fonksiyon.
+ */
+add_action('wp_ajax_nopriv_dv_onay_formunu_isle', 'dv_ajax_onay_formunu_isle');
+add_action('wp_ajax_dv_onay_formunu_isle', 'dv_ajax_onay_formunu_isle');
+
+function dv_ajax_onay_formunu_isle() {
+    // Güvenlik için Nonce kontrolü eklenebilir.
+    // check_ajax_referer('dv_rezervasyon_nonce');
+
+    // Formdan gelen verileri al ve temizle
+    $secilen_hizmetler = isset($_POST['hizmet']) ? array_map('sanitize_text_field', $_POST['hizmet']) : array();
+    
+    // adetleri de almak için bir döngü
+    $hizmet_adetleri = array();
+    foreach ($_POST as $key => $value) {
+        if (strpos($key, 'hizmet_adet_') === 0) {
+            $hizmet_id = str_replace('hizmet_adet_', '', $key);
+            $hizmet_adetleri[$hizmet_id] = intval($value);
+        }
+    }
+
+    //
+    // BURADA VERİLERİ İŞLEYİN
+    // Örneğin: veritabanına kaydedin, email gönderin, bir sonraki adıma yönlendirmek için veri hazırlayın.
+    //
+
+    // İşlem başarılı ise JSON formatında başarı mesajı döndür.
+    wp_send_json_success(array(
+        'title'   => 'Başarılı!',
+        'message' => 'Ek hizmetleriniz sepete eklendi. Bir sonraki adıma yönlendiriliyorsunuz.',
+        'redirect_url' => home_url('/rezervasyon-ozeti') // Bir sonraki sayfanın slug'ı
+    ));
+
+    // wp_send_json_error() ile hata durumlarını da yönetebilirsiniz.
+
+    wp_die(); // AJAX işlemlerinde bu fonksiyonun sonunda wp_die() kullanılması zorunludur.
+}
