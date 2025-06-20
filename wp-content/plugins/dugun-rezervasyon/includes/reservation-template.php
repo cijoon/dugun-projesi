@@ -687,7 +687,9 @@ document.querySelectorAll('.service-card.selected[data-price]').forEach(card => 
   toYearView();          // varsayılan görünüm
   updatePriceSummary();  // sayfa ilk açılış
 });
+
 document.getElementById('devamEtBtn').addEventListener('click', () => {
+  
   const selectedServices = [];
   document.querySelectorAll('.service-card.selected').forEach(card => {
     const name = card.dataset.name || 'Hizmet';

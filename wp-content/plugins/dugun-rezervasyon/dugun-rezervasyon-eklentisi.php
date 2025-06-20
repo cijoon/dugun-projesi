@@ -41,3 +41,11 @@ add_action( 'plugins_loaded', function () {
         require_once DR_PLUGIN_PATH . 'includes/wc-integration.php';
     }
 });
+add_action( 'plugins_loaded', function () {
+    if ( class_exists( 'WooCommerce' ) ) {
+        require_once DR_PLUGIN_PATH . 'includes/wc-integration.php';
+        require_once DR_PLUGIN_PATH . 'includes/js-footer-injector.php';
+    }
+});
+
+

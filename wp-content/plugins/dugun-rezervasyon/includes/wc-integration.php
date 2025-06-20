@@ -14,7 +14,7 @@ add_action( 'woocommerce_before_calculate_totals', function ( $cart ) {
     }
 } );
 
-/* 2) AJAX: Sepeti oluştur + checkout URL’i döndür           */
+/* 2) AJAX: Sepeti oluştur + checkout URL'i döndür           */
 add_action( 'wp_ajax_dr_create_order',       'dr_create_reservation_order' );
 add_action( 'wp_ajax_nopriv_dr_create_order','dr_create_reservation_order' );
 
@@ -24,7 +24,7 @@ function dr_create_reservation_order() {
     $total = floatval( $_POST['total'] ?? 0 );
     if ( $total <= 0 ) wp_send_json_error( 'total' );
 
-    /* === ÜRÜN ID’nizi BURAYA yazın === */
+    /* === ÜRÜN ID'nizi BURAYA yazın === */
     $product_id = 23;
 
     WC()->cart->empty_cart();                                            // sepet temizle
@@ -70,4 +70,32 @@ add_action( 'woocommerce_thankyou', function ( $order_id ) {
         update_option( 'dr_unavailable_dates', array_values( array_unique( $dates ) ) );
     }
 } );
+// Doğrudan erişimi engelle
+defined('ABSPATH') || exit;
+
+/**
+ * Checkout alanlarını whitelist'e ekle
+ */
+add_filter('woocommerce_checkout_fields', function ($fields) {
+    $fields['order']['reservation_date'] = ['type' => 'hidden'];
+    $fields['order']['reservation_hour'] = ['type' => 'hidden'];
+    return $fields;
+});
+
+/**
+ * Siparişe rezervasyon meta verilerini kaydet
+ */
+add_action('woocommerce_checkout_create_order', function ($order) {
+    if (isset($_POST['reservation_date'])) {
+        $order->update_meta_data('_reservation_date', sanitize_text_field($_POST['reservation_date']));
+    } else if ($extra = WC()->session->get('dr_extra')) {
+        if (!empty($extra['iso'])) {
+            $order->update_meta_data('_reservation_date', $extra['iso']);
+        }
+    }
+    if (isset($_POST['reservation_hour'])) {
+        $order->update_meta_data('_reservation_hour', sanitize_text_field($_POST['reservation_hour']));
+    }
+});
+
 

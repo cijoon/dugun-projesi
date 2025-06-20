@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
 // Bu kısım zaten HTML dosyasındaki script bloğunda var ve oradaki updatePriceSummary'yi tetikliyor.
 // Bu yüzden buradaki tekrarı sildim.
 // document.querySelectorAll('input[name="paymentMethod"]').forEach(input => {
