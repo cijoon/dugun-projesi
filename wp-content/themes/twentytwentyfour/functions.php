@@ -266,3 +266,343 @@ function dv_ajax_onay_formunu_isle() {
 
     wp_die(); // AJAX işlemlerinde bu fonksiyonun sonunda wp_die() kullanılması zorunludur.
 }
+/* ——— WooCommerce checkout formuna gizli alan ekle ——— */
+/*  functions.php  */
+add_action( 'wp_footer', function () {
+
+    if ( ! is_checkout() ) return;   // güvenlik
+
+?>
+<script>
+(function () {
+
+    function dvSetReservationFields () {
+
+        const isoDate  = localStorage.getItem('isoDate');      // 2025-12-31
+        const slotTime = localStorage.getItem('summaryHour');  // 12:30 - 14:30
+        if ( !isoDate && !slotTime ) return;
+
+        /* ---- 1. Checkout formunu bul ---- */
+        const form =
+              document.querySelector('form.checkout') ||
+              document.querySelector('form.wc-block-checkout__form');
+        if ( !form ) return;   // hâlâ yoksa blok henüz çizilmemiştir
+
+        /* ---- 2. Tarih gizli input'u ---- */
+        let dateInput = form.querySelector('input[name="reservation_date"]');
+        if ( !dateInput ) {
+            dateInput = document.createElement('input');
+            dateInput.type  = 'hidden';
+            dateInput.name  = 'reservation_date';
+            form.appendChild( dateInput );
+        }
+        if ( isoDate ) dateInput.value = isoDate;
+
+        /* ---- 3. Saat gizli input'u ---- */
+        let hourInput = form.querySelector('input[name="reservation_hour"]');
+        if ( !hourInput ) {
+            hourInput = document.createElement('input');
+            hourInput.type  = 'hidden';
+            hourInput.name  = 'reservation_hour';
+            form.appendChild( hourInput );
+        }
+        if ( slotTime ) hourInput.value = slotTime;
+
+        /* ---- 4. (Opsiyonel) Özet alanına yaz ---- */
+        const pretty = localStorage.getItem('summaryDate') || isoDate;
+        const target = document.getElementById('order-reservation-date');
+        if ( target ) {
+            target.textContent = slotTime ? `${pretty} • ${slotTime}` : pretty;
+        }
+    }
+
+    /* İlk form çizimi bittiğinde */
+    window.addEventListener('load', dvSetReservationFields);
+
+    /* Blok checkout bazı alanları AJAX'la yeniden çizerken MutationObserver
+       ile form kaybolup tekrar eklenebilir; 1 sn'de bir kontrol etmek güvenli. */
+    let tried = 0;
+    const interval = setInterval(() => {
+        dvSetReservationFields();
+        if ( ++tried > 5 ) clearInterval(interval);   // 5 sn sonra bırak
+    }, 1000);
+
+})();
+</script>
+<?php
+}, 999 );
+  // En sonda çıksın ki başka JS'ler formu çizdikten sonra çalışsın
+
+
+add_action( 'wp_footer', function () {
+    if ( is_order_received_page() ) : ?>
+        <script>
+        localStorage.removeItem('isoDate');
+        localStorage.removeItem('summaryHour');
+        localStorage.removeItem('summaryDate');
+        </script>
+    <?php endif;
+} );
+/* --------- 3-A) Admin: sipariş detayında göster --------- */
+add_action( 'woocommerce_admin_order_data_after_billing_address', function ( $order ) {
+    $date = $order->get_meta( '_reservation_date' );
+    $hour = $order->get_meta( '_reservation_hour' );
+    if ( $date ) {
+        echo '<p><strong>Rezervasyon:</strong> ' .
+             esc_html( trim( $date . ' ' . $hour ) ) .
+             '</p>';
+    }
+} );
+
+/* --------- 3-B) E-posta şablonuna ekle --------- */
+add_filter( 'woocommerce_email_order_meta_fields',
+    function ( $fields, $sent_to_admin, $order ) {
+
+        $date = $order->get_meta( '_reservation_date' );
+        $hour = $order->get_meta( '_reservation_hour' );
+
+        if ( $date ) {
+            $fields['reservation'] = [
+                'label' => 'Rezervasyon',
+                'value' => trim( $date . ' ' . $hour ),
+            ];
+        }
+        return $fields;
+    }, 10, 3 );
+	/*  Tema/child-theme functions.php */
+add_action( 'wp_enqueue_scripts', function () {
+    wp_enqueue_script( 'jquery' );   // WordPress çekirdeğindeki hazır kütüphaneyi ekler
+} );
+
+// =========================================================================
+// DÜĞÜN REZERVASYON WOOCOMMERCE ENTEGRASYONU
+// =========================================================================
+
+/**
+ * 1. Checkout formuna gizli 'reservation_date' ve 'reservation_hour' alanlarını ekler.
+ * Bu, WooCommerce'in bu alanları POST isteğinde tanımasını sağlar.
+ */
+add_filter( 'woocommerce_checkout_fields', function ( $fields ) {
+    // Bu alanlar gizli olacağı için etiket vs. gerekmez.
+    $fields['order']['reservation_date'] = [ 'type' => 'hidden' ];
+    $fields['order']['reservation_hour'] = [ 'type' => 'hidden' ];
+    return $fields;
+} );
+
+/**
+ * 2. Sipariş oluşturulduğunda, formdan gelen rezervasyon verilerini sipariş meta verisi olarak kaydeder.
+ * Bu hook, `woocommerce_checkout_process`'ten sonra çalışır ve sipariş nesnesine erişim sağlar.
+ */
+add_action( 'woocommerce_checkout_create_order', function ( $order ) {
+    // Rezervasyon Tarihi
+    if ( ! empty( $_POST['reservation_date'] ) ) {
+        // Güvenlik için veriyi temizle ve meta olarak kaydet.
+        // Başına '_' koymak, bu alanın admin panelinde varsayılan olarak gizli olmasını sağlar.
+        $order->update_meta_data( '_reservation_date', sanitize_text_field( $_POST['reservation_date'] ) );
+    }
+
+    // Rezervasyon Saati
+    if ( ! empty( $_POST['reservation_hour'] ) ) {
+        $order->update_meta_data( '_reservation_hour', sanitize_text_field( $_POST['reservation_hour'] ) );
+    }
+} );
+
+/**
+ * 3. Kaydedilen rezervasyon bilgilerini Admin Sipariş Detay sayfasında gösterir.
+ */
+add_action( 'woocommerce_admin_order_data_after_billing_address', function ( $order ) {
+    $date = $order->get_meta( '_reservation_date' );
+    $hour = $order->get_meta( '_reservation_hour' );
+
+    if ( $date ) {
+        // Tarihi daha okunur bir formata çevirelim (YYYY-MM-DD -> DD/MM/YYYY)
+        $formatted_date = date_format( date_create( $date ), 'd F Y' );
+        echo '<p><strong>Rezervasyon Tarihi:</strong> ' . esc_html( $formatted_date ) . '</p>';
+    }
+    if ( $hour ) {
+        echo '<p><strong>Rezervasyon Saati:</strong> ' . esc_html( $hour ) . '</p>';
+    }
+});
+
+
+/**
+ * 4. ÇÖZÜM: localStorage verilerini checkout formuna aktaran JavaScript kodunu
+ *    sadece checkout sayfasının footer'ına ekler.
+ */
+add_action( 'wp_footer', function () {
+    // Sadece ödeme sayfasında çalışmasını sağla.
+    if ( ! function_exists('is_checkout') || ! is_checkout() ) {
+        return;
+    }
+    ?>
+    <script id="reservation-data-transfer-v2">
+    document.addEventListener('DOMContentLoaded', () => {
+        const attachReservationData = () => {
+            // En yaygın checkout formu seçicilerini dene
+            const form = document.querySelector('form.wc-block-checkout__form') || 
+                         document.querySelector('form.checkout.woocommerce-checkout');
+            
+            if (!form) {
+                // Form henüz yoksa, birazdan tekrar deneyeceğiz.
+                return false; 
+            }
+
+            const reservationDate = localStorage.getItem('isoDate');
+            const reservationHour = localStorage.getItem('summaryHour');
+
+            if (!reservationDate || !reservationHour) {
+                console.error('[HATA] Rezervasyon tarihi/saati localStorage\'da bulunamadı.');
+                return true; // Hata var ama tekrar denemeye gerek yok.
+            }
+
+            // --- Gizli input'ları oluştur veya güncelle ---
+            let dateInput = form.querySelector('input[name="reservation_date"]');
+            if (!dateInput) {
+                dateInput = document.createElement('input');
+                dateInput.type = 'hidden';
+                dateInput.name = 'reservation_date';
+                form.appendChild(dateInput);
+                console.log('reservation_date input oluşturuldu.');
+            }
+            dateInput.value = reservationDate;
+
+            let hourInput = form.querySelector('input[name="reservation_hour"]');
+            if (!hourInput) {
+                hourInput = document.createElement('input');
+                hourInput.type = 'hidden';
+                hourInput.name = 'reservation_hour';
+                form.appendChild(hourInput);
+                console.log('reservation_hour input oluşturuldu.');
+            }
+            hourInput.value = reservationHour;
+            
+            console.log(`%c[BAŞARILI] Rezervasyon verileri forma aktarıldı: TARİH=${reservationDate}, SAAT=${reservationHour}`, 'color: green; font-weight: bold;');
+            
+            return true; // İşlem başarıyla tamamlandı.
+        };
+
+        // Formun yüklenmesini beklemek için setInterval kullanıyoruz.
+        // Bu, MutationObserver'dan daha "kaba kuvvet" bir yöntemdir ama Blocks'un 
+        // karmaşık yapısında daha güvenilir olabilir.
+        const intervalId = setInterval(() => {
+            // attachReservationData() true döndürdüğünde (yani işini bitirdiğinde) interval'ı durdur.
+            if (attachReservationData()) {
+                clearInterval(intervalId);
+            }
+        }, 500); // Yarım saniyede bir kontrol et.
+
+        // Sayfa çok geç yüklenirse diye, 10 saniye sonra interval'ı her ihtimale karşı durdur.
+        setTimeout(() => {
+            clearInterval(intervalId);
+        }, 10000);
+    });
+    </script>
+    <?php
+});
+
+/**
+ * 5. Sipariş tamamlandı sayfasında localStorage'ı temizler.
+ */
+add_action( 'wp_footer', function () {
+    if ( function_exists('is_order_received_page') && is_order_received_page() ) {
+        ?>
+        <script>
+            localStorage.removeItem('isoDate');
+            localStorage.removeItem('summaryHour');
+            localStorage.removeItem('summaryDate');
+            console.log('Rezervasyon verileri localStorage\'dan temizlendi.');
+        </script>
+        <?php
+    }
+});
+
+// functions.php dosyasının sonuna, wp_footer hook'unun içine bu script'i ekle
+
+add_action( 'wp_footer', function () {
+    // Sadece ödeme sayfasında çalışsın
+    if ( ! function_exists('is_checkout') || ! is_checkout() ) {
+        return;
+    }
+    ?>
+    <script id="reservation-debug-script">
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('%c[DEBUG] Rezervasyon Hata Ayıklama Scripti Başladı.', 'color: #0073e6; font-weight: bold;');
+
+        // 1. localStorage'daki veriyi kontrol et
+        const reservationDate = localStorage.getItem('isoDate');
+        const reservationHour = localStorage.getItem('summaryHour');
+
+        if (reservationDate && reservationHour) {
+            console.log(`%c[DEBUG] localStorage'da veri bulundu: Tarih=${reservationDate}, Saat=${reservationHour}`, 'color: blue;');
+        } else {
+            console.error('%c[DEBUG] HATA: Gerekli (isoDate, summaryHour) verileri localStorage\'da bulunamadı! Lütfen takvim sayfasına dönüp tarih seçin.', 'color: red; font-weight: bold;');
+            return; // Veri yoksa script'i durdur.
+        }
+
+        let formFoundAndUpdated = false;
+
+        const debugInterval = setInterval(() => {
+            if (formFoundAndUpdated) {
+                clearInterval(debugInterval);
+                return;
+            }
+            
+            console.log('[DEBUG] Checkout formu aranıyor...');
+            
+            // WooCommerce Blocks formu için doğru seçici
+            const form = document.querySelector('form.wc-block-checkout__form');
+            
+            if (form) {
+                console.log('%c[DEBUG] Checkout formu bulundu!', 'color: green;');
+
+                // 2. Gizli input'ları ekle/güncelle
+                let dateInput = form.querySelector('input[name="reservation_date"]');
+                if (!dateInput) {
+                    dateInput = document.createElement('input');
+                    dateInput.type = 'hidden';
+                    dateInput.name = 'reservation_date';
+                    form.appendChild(dateInput);
+                    console.log('[DEBUG] "reservation_date" input\'u forma eklendi.');
+                }
+                dateInput.value = reservationDate;
+
+                let hourInput = form.querySelector('input[name="reservation_hour"]');
+                if (!hourInput) {
+                    hourInput = document.createElement('input');
+                    hourInput.type = 'hidden';
+                    hourInput.name = 'reservation_hour';
+                    form.appendChild(hourInput);
+                    console.log('[DEBUG] "reservation_hour" input\'u forma eklendi.');
+                }
+                hourInput.value = reservationHour;
+
+                // 3. Eklenen veriyi DOM'dan tekrar okuyarak doğrula
+                const finalDateValue = form.querySelector('input[name="reservation_date"]').value;
+                const finalHourValue = form.querySelector('input[name="reservation_hour"]').value;
+                
+                console.log(`%c[DEBUG] DOĞRULAMA: Forma yazılan değerler -> Tarih=${finalDateValue}, Saat=${finalHourValue}`, 'color: green; font-weight: bold;');
+
+                formFoundAndUpdated = true; // İşlem tamamlandı olarak işaretle
+                clearInterval(debugInterval); // Interval'ı durdur
+                console.log('%c[DEBUG] İşlem tamamlandı. Hata ayıklama durduruldu.', 'color: #0073e6;');
+
+            } else {
+                console.warn('[DEBUG] Form henüz bulunamadı, 1 saniye sonra tekrar denenecek.');
+            }
+
+        }, 1000); // Her saniye kontrol et
+
+        // Güvenlik önlemi olarak 15 saniye sonra interval'ı durdur
+        setTimeout(() => {
+            clearInterval(debugInterval);
+            if (!formFoundAndUpdated) {
+                console.error('%c[DEBUG] HATA: 15 saniye içinde checkout formu bulunamadı. Sayfada yapısal bir sorun olabilir veya form seçici (selector) yanlış.', 'color: red; font-weight: bold;');
+            }
+        }, 15000);
+    });
+    </script>
+    <?php
+});
+
+?>
+

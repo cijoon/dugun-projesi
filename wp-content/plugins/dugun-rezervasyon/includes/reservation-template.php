@@ -427,6 +427,9 @@ body { font-family:'Inter',sans-serif; background:#F5F7FB; }
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// ----- HER YENİ REZERVASYONDA TEMİZLE -----
+localStorage.removeItem('isoDate');
+
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ——— 1) SABİT DİZİ & FONKSİYONLAR ——— */
@@ -523,38 +526,54 @@ document.addEventListener('DOMContentLoaded', () => {
     drawSlots();
   }
 
-  /* ——— 4) SAAT DÜĞMELERİ ——— */
-  function drawSlots() {
-    slotGroup.innerHTML = '';
-    SAATLER.forEach(s => {
-      const b = document.createElement('button');
-      b.className = 'btn ' + (slot===s ? 'btn-primary' : 'btn-outline-primary');
-      b.textContent = s;
-      b.onclick = () => { slot=s; drawSlots(); updateSummary(); };
-      slotGroup.appendChild(b);
-    });
+function highlightDays() {
+  document.querySelectorAll('#dayBody button').forEach(btn => {
+    if (btn.disabled) return;
+    const num = parseInt(btn.textContent, 10) || null;
+    btn.classList.toggle('btn-primary', num === g);
+    btn.classList.toggle('btn-light',    num !== g);
+  });
+}
+
+/* ——— 4) SAAT DÜĞMELERİ ——— */
+function drawSlots() {
+  slotGroup.innerHTML = '';
+  SAATLER.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (slot === s ? 'btn-primary' : 'btn-outline-primary');
+    b.textContent = s;
+    b.onclick = () => {
+      slot = s;
+      drawSlots();
+      updateSummary();
+    };
+    slotGroup.appendChild(b);
+  });
+
+  highlightDays();   // gün vurgusunu yenile
+}
+
+function updateSummary() {
+  /* Tarih */
+  if (g) {
+    const dObj    = new Date(y, m, g);
+    const dayName = ['Paz','Pzt','Salı','Çar','Per','Cum','Cmt'][dObj.getDay()];
+    summaryDate.textContent = `${g} ${AY_ADLARI[m]} ${y} ${dayName}`;
+
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(g).padStart(2, '0')}`;
+    localStorage.setItem('isoDate',     iso);
+    localStorage.setItem('summaryDate', summaryDate.textContent);
+  } else {
+    summaryDate.textContent = '—';
+    localStorage.removeItem('isoDate');
+    localStorage.removeItem('summaryDate');
   }
 
-  /* ——— 5) ÖZET ALANI ——— */
-  function updateSummary() {
-    if (g) {
-      const dObj = new Date(y,m,g);
-      const dayName = ['Paz','Pzt','Salı','Çar','Per','Cum','Cmt'][dObj.getDay()];
-      summaryDate.textContent = `${g} ${AY_ADLARI[m]} ${y} ${dayName}`;
-    } else summaryDate.textContent = '—';
-    summaryHour.textContent = slot || '—';
-  }
-
-  function highlightDays() {
-    document.querySelectorAll('#dayBody button').forEach(b=>{
-      if(b.disabled) return;
-      const num = parseInt(b.textContent) || null;
-      b.classList.toggle('btn-primary', num===g);
-      b.classList.toggle('btn-light',    num!==g);
-    });
-  }
-
-  /* ——— 6) GÖRÜNÜM GEÇİŞLERİ ——— */
+  /* Saat */
+  summaryHour.textContent = slot || '—';
+  localStorage.setItem('summaryHour', summaryHour.textContent);
+}
+/* ——— 6) GÖRÜNÜM GEÇİŞLERİ ——— */
   const btnMonthView = document.getElementById('btnMonthView');
   const btnYearView  = document.getElementById('btnYearView');
 

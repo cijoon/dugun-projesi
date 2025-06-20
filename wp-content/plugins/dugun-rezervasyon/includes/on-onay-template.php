@@ -176,7 +176,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // 5) Continue to payment
   document.getElementById('toPaymentBtn').addEventListener('click', () => {
     localStorage.setItem('toplamTutar', total.toString());
-    window.location.href = '/ödeme';  // adjust to your actual payment URL
+    window.location.href = '<?php echo site_url( "/rezervasyon-odeme/" ); ?>';
+
+  // adjust to your actual payment URL
   });
 });
 </script>
