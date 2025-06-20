@@ -44,8 +44,28 @@ add_action( 'plugins_loaded', function () {
 add_action( 'plugins_loaded', function () {
     if ( class_exists( 'WooCommerce' ) ) {
         require_once DR_PLUGIN_PATH . 'includes/wc-integration.php';
-        require_once DR_PLUGIN_PATH . 'includes/js-footer-injector.php';
     }
 });
+// dugun-rezervasyon-eklentisi.php dosyasının en sonuna ekleyin
+
+/**
+ * Frontend için gerekli script'leri ve verileri yükler.
+ */
+function dr_enqueue_frontend_scripts() {
+    // Bu script'in sadece rezervasyon kısa kodunun olduğu sayfalarda yüklenmesi daha performanslıdır,
+    // ama şimdilik tüm sayfalarda çalışacak şekilde basit tutuyoruz.
+
+    // 1. Veritabanından yönetici tarafından engellenen tarihleri çekiyoruz.
+    $unavailable_dates = get_option('dr_unavailable_dates', []);
+
+    // 2. Bu PHP dizisini, JavaScript'in kullanabilmesi için bir JavaScript nesnesine çeviriyoruz.
+    // WordPress'in standart ve güvenli yöntemi wp_localize_script'tir.
+    // Herhangi bir script'e "bağlayabiliriz", bu yüzden 'jquery' kullanalım.
+    wp_localize_script('jquery', 'DR_CALENDAR_DATA', [
+        'unavailableDates' => $unavailable_dates,
+    ]);
+}
+add_action('wp_enqueue_scripts', 'dr_enqueue_frontend_scripts');
+
 
 
